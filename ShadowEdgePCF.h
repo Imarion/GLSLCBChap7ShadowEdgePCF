@@ -14,6 +14,7 @@
 
 #include "teapot.h"
 #include "vboplane.h"
+#include "vbomesh.h"
 #include "torus.h"
 #include "frustum.h"
 
@@ -47,6 +48,7 @@ private:
     void CreateVertexBuffer();    
     void initMatrices();
     void drawscene();
+    void drawBuildingScene();
     void renderScene();
 
     void PrepareTexture(GLenum TextureTarget, const QString& FileName, GLuint& TexObject, bool flip);
@@ -67,18 +69,21 @@ private:
     float  tPrev, angle;
     int    shadowMapWidth, shadowMapHeight;
 
-    GLuint mVAOTeapot, mVAOPlane, mVAOTorus, mVBO, mIBO, shadowFBO;
+    GLuint mVAOTeapot, mVAOPlane, mVAOTorus, mVAOBuilding, mVAOPlaneBuilding, mVBO, mIBO, shadowFBO;
     GLuint mPositionBufferHandle, mColorBufferHandle;
     GLuint mRotationMatrixLocation;
     GLuint pass1Index, pass2Index;
 
     Teapot   *mTeapot;
-    VBOPlane *mPlane;
+    VBOPlane *mPlane, *mPlaneBuilding;
     Torus    *mTorus;
+    VBOMesh  *mBuilding;
 
     QVector3D  worldLight;
     Frustum    *lightFrustum;
-    QMatrix4x4 ModelMatrixTeapot, ModelMatrixPlane[3], ModelMatrixTorus, ViewMatrix, ProjectionMatrix;
+    QMatrix4x4 ViewMatrix, ProjectionMatrix;
+    QMatrix4x4 ModelMatrixTeapot, ModelMatrixPlane[3], ModelMatrixTorus;
+    QMatrix4x4 ModelMatrixBuilding, ModelMatrixPlanebuilding;
     QMatrix4x4 shadowBias, LightPV, ViewMatrixLight, ProjectionMatrixLight;
 
     //debug

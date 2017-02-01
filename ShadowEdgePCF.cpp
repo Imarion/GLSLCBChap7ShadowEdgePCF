@@ -86,15 +86,14 @@ void MyWindow::initialize()
 
     lightFrustum = new Frustum(Projection::PERSPECTIVE);
     float c = 1.65f;
-    QVector3D lightPos(0.0f,c * 5.25f, c * 7.5f);  // World coords
+    //QVector3D lightPos(0.0f,c * 5.25f, c * 7.5f);  // World coords
+    QVector3D lightPos(-2.5f,2.0f,-2.5f);  // World coords
     lightFrustum->orient( lightPos, QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f,1.0f,0.0f));
-    lightFrustum->setPerspective( 50.0f, 1.0f, 1.0f, 25.0f);
+    lightFrustum->setPerspective( 40.0f, 1.0f, 0.1f, 100.0f);
     LightPV = shadowBias * lightFrustum->getProjectionMatrix() * lightFrustum->getViewMatrix();
 
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(2.5, 10.0);
 }
 
 void MyWindow::setupFBO()
@@ -243,6 +242,74 @@ void MyWindow::CreateVertexBuffer()
     // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TorusHandles[2]);
 
+
+    //  *** Building
+    mFuncs->glGenVertexArrays(1, &mVAOBuilding);
+    mFuncs->glBindVertexArray(mVAOBuilding);
+
+    mBuilding = new VBOMesh("../media/building.obj");
+
+    // Create and populate the buffer objects
+    unsigned int buildingHandles[3];
+    glGenBuffers(3, buildingHandles);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buildingHandles[0]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mBuilding->getnVerts()) * sizeof(float), mBuilding->getv(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buildingHandles[1]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mBuilding->getnVerts()) * sizeof(float), mBuilding->getn(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buildingHandles[2]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * mBuilding->getnFaces() * sizeof(unsigned int), mBuilding->getelems(), GL_STATIC_DRAW);
+
+    // Setup the VAO
+    // Vertex positions
+    mFuncs->glBindVertexBuffer(0, buildingHandles[0], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(0, 0);
+
+    // Vertex normals
+    mFuncs->glBindVertexBuffer(1, buildingHandles[1], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(1, 1);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buildingHandles[2]);
+
+
+    // *** Planebuilding
+    mFuncs->glGenVertexArrays(1, &mVAOPlaneBuilding);
+    mFuncs->glBindVertexArray(mVAOPlaneBuilding);
+
+    mPlaneBuilding = new VBOPlane(20.0f, 20.0f, 2.0, 2.0);
+
+    // Create and populate the buffer objects
+    unsigned int PlanebuildingHandles[3];
+    glGenBuffers(3, PlanebuildingHandles);
+
+    glBindBuffer(GL_ARRAY_BUFFER, PlanebuildingHandles[0]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mPlaneBuilding->getnVerts()) * sizeof(float), mPlaneBuilding->getv(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, PlanebuildingHandles[1]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mPlaneBuilding->getnVerts()) * sizeof(float), mPlaneBuilding->getn(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PlanebuildingHandles[2]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * mPlaneBuilding->getnFaces() * sizeof(unsigned int), mPlaneBuilding->getelems(), GL_STATIC_DRAW);
+
+    // Setup the VAO
+    // Vertex positions
+    mFuncs->glBindVertexBuffer(0, PlanebuildingHandles[0], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(0, 0);
+
+    // Vertex normals
+    mFuncs->glBindVertexBuffer(1, PlanebuildingHandles[1], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(1, 1);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PlanebuildingHandles[2]);
+
     mFuncs->glBindVertexArray(0);
 
 }
@@ -258,7 +325,7 @@ void MyWindow::initMatrices()
     ModelMatrixPlane[1].rotate(-90.0f, QVector3D(0.0f, 0.0f, 1.0f));
 
     ModelMatrixPlane[2].translate( 0.0f, 5.0f, -5.0f);
-    ModelMatrixPlane[2].rotate(-90.0f, QVector3D(1.0f, 0.0f, 0.0f));
+    ModelMatrixPlane[2].rotate(-90.0f, QVector3D(1.0f, 0.0f, 0.0f));    
 
     //ViewMatrix.lookAt(QVector3D(5.0f, 5.0f, 7.5f), QVector3D(0.0f,0.75f,0.0f), QVector3D(0.0f,1.0f,0.0f));
 
@@ -313,7 +380,8 @@ void MyWindow::renderScene()
     if (angle > TwoPI) angle -= TwoPI;
 
     float c = 1.0f;
-    QVector3D cameraPos(c * 11.5f * cos(angle),c * 7.0f,c * 11.5f * sin(angle));
+    //QVector3D cameraPos(c * 11.5f * cos(angle),c * 7.0f,c * 11.5f * sin(angle));
+    QVector3D cameraPos(1.8f * cos(angle),0.7f,1.8f * sin(angle));
 
     //Pass 1 - render shadow map
     ViewMatrix.setToIdentity();
@@ -328,12 +396,19 @@ void MyWindow::renderScene()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
-    drawscene();
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.5f,10.0f);
+
+    drawBuildingScene();
+
+    glCullFace(GL_BACK);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
     //Pass 2 - actual render
 
     ViewMatrix.setToIdentity();
-    ViewMatrix.lookAt(cameraPos,QVector3D(0.0f, 0.0f, 0.0f),QVector3D(0.0f,1.0f,0.0f));
+    //ViewMatrix.lookAt(cameraPos,QVector3D(0.0f, 0.0f, 0.0f),QVector3D(0.0f,1.0f,0.0f));
+    ViewMatrix.lookAt(cameraPos,QVector3D(0.0f,-0.175f,0.0f),QVector3D(0.0f,1.0f,0.0f));
     ProjectionMatrix.setToIdentity();
     ProjectionMatrix.perspective(50.0f, (float)this->width()/(float)this->height(), 0.1f, 100.0f);
 
@@ -343,9 +418,79 @@ void MyWindow::renderScene()
     mFuncs->glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
     glDisable(GL_CULL_FACE);
 
-    drawscene();
+    drawBuildingScene();
 
     mContext->swapBuffers(this);
+}
+
+void MyWindow::drawBuildingScene()
+{
+    QVector3D color(1.0f,0.85f,0.55f);
+
+    // Draw building
+    mFuncs->glBindVertexArray(mVAOBuilding);
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    mProgram->bind();
+    {
+        mProgram->setUniformValue("Light.Position", ViewMatrix * QVector4D(lightFrustum->getOrigin(), 1.0f));
+        mProgram->setUniformValue("Light.Intensity", QVector3D(0.85f, 0.85f, 0.85f));
+        mProgram->setUniformValue("ViewNormalMatrix", ViewMatrix.normalMatrix());
+
+        mProgram->setUniformValue("ShadowMatrix", LightPV * ModelMatrixBuilding);
+        mProgram->setUniformValue("ShadowMap", 0);
+
+        QMatrix4x4 mv1 = ViewMatrix * ModelMatrixBuilding;
+        mProgram->setUniformValue("ModelViewMatrix", mv1);
+        mProgram->setUniformValue("NormalMatrix", mv1.normalMatrix());
+        mProgram->setUniformValue("MVP", ProjectionMatrix * mv1);
+
+        mProgram->setUniformValue("Material.Ka", color * 0.1f);
+        mProgram->setUniformValue("Material.Kd", color);
+        mProgram->setUniformValue("Material.Ks", 0.0f, 0.0f, 0.0f);
+        mProgram->setUniformValue("Material.Shininess", 1.0f);
+
+        glDrawElements(GL_TRIANGLES, 3 * mBuilding->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+    }
+    mProgram->release();
+
+    // Draw plane building
+    mFuncs->glBindVertexArray(mVAOPlaneBuilding);
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    mProgram->bind();
+    {
+        mProgram->setUniformValue("Light.Position", ViewMatrix * QVector4D(lightFrustum->getOrigin(), 1.0f));
+        mProgram->setUniformValue("Light.Intensity", QVector3D(0.85f, 0.85f, 0.85f));
+        mProgram->setUniformValue("ViewNormalMatrix", ViewMatrix.normalMatrix());
+
+        mProgram->setUniformValue("ShadowMatrix", LightPV * ModelMatrixPlanebuilding);
+        mProgram->setUniformValue("ShadowMap", 0);
+
+        QMatrix4x4 mv2 = ViewMatrix * ModelMatrixPlanebuilding;
+        mProgram->setUniformValue("ModelViewMatrix", mv2);
+        mProgram->setUniformValue("NormalMatrix", mv2.normalMatrix());
+        mProgram->setUniformValue("MVP", ProjectionMatrix * mv2);
+
+        mProgram->setUniformValue("Material.Kd", 0.25f, 0.25f, 0.25f);
+        mProgram->setUniformValue("Material.Ks", 0.0f, 0.0f, 0.0f);
+        mProgram->setUniformValue("Material.Ka", 0.05f, 0.05f, 0.05f);
+        mProgram->setUniformValue("Material.Shininess", 1.0f);
+
+        glDrawElements(GL_TRIANGLES, 6 * mPlaneBuilding->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+    }
+    mProgram->release();
+
 }
 
 void MyWindow::drawscene()

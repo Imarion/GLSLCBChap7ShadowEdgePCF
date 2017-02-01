@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     teapot.cpp \
     vboplane.cpp \
     torus.cpp \
-    frustum.cpp
+    frustum.cpp \
+    vbomesh.cpp
 
 HEADERS += \
     ShadowEdgePCF.h \
@@ -21,7 +22,8 @@ HEADERS += \
     teapot.h \
     vboplane.h \
     torus.h \
-    frustum.h
+    frustum.h \
+    vbomesh.h
 
 OTHER_FILES += \
     fshader.txt \
