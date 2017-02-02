@@ -20,7 +20,7 @@ MyWindow::~MyWindow()
 }
 
 MyWindow::MyWindow()
-    : mProgram(0), currentTimeMs(0), currentTimeS(0), tPrev(0), angle(M_PI / 4.0f), shadowMapWidth(512), shadowMapHeight(512)
+    : mProgram(0), currentTimeMs(0), currentTimeS(0), tPrev(0), angle(TwoPI * 0.85f), shadowMapWidth(512), shadowMapHeight(512)
 {
     setSurfaceType(QWindow::OpenGLSurface);
     setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
@@ -94,6 +94,9 @@ void MyWindow::initialize()
 
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0, 1.0);
 }
 
 void MyWindow::setupFBO()
@@ -396,13 +399,14 @@ void MyWindow::renderScene()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(2.5f,10.0f);
+    //glEnable(GL_POLYGON_OFFSET_FILL);
+    //glPolygonOffset(2.5f,10.0f);
+    //glPolygonOffset(2.0f,10.0f);
 
     drawBuildingScene();
 
     glCullFace(GL_BACK);
-    glDisable(GL_POLYGON_OFFSET_FILL);
+    //glDisable(GL_POLYGON_OFFSET_FILL);
 
     //Pass 2 - actual render
 
@@ -416,7 +420,7 @@ void MyWindow::renderScene()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0,0,this->width(), this->height());
     mFuncs->glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
-    glDisable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
 
     drawBuildingScene();
 
